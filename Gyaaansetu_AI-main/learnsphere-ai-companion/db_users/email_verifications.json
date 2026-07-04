@@ -1,0 +1,16 @@
+{
+  "bc48eb5f-ca25-49ff-b8d4-7310a6d7d729": {
+    "email": "kd7158856@gmail.com",
+    "codeHash": "ae6f358e921b0e33f54044b390652b4c127fed5e1a7c0bcc54ce9b356302c27e",
+    "expiresAt": 1783061677663,
+    "purpose": "social",
+    "provider": "Google"
+  },
+  "180c8bae-ada2-4d6a-b52f-4617c11a2794": {
+    "email": "shreyashahidz3@gmail.com",
+    "codeHash": "b40e1350f4b874a48c3be66f35e3b76974593802a3ab8c8010178170bf77695d",
+    "expiresAt": 1783139954367,
+    "purpose": "social",
+    "provider": "GitHub"
+  }
+}

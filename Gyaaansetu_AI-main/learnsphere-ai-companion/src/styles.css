@@ -1,0 +1,392 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-cyan: var(--cyan);
+  --color-neon: var(--neon);
+  --color-purple: var(--purple);
+  --color-pink: var(--pink);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-glass: var(--glass);
+
+  --font-display: "Poppins", "Inter", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.875rem;
+  --background: oklch(0.98 0.01 240);
+  --foreground: oklch(0.15 0.03 240);
+  --card: oklch(1 0 0 / 0.8);
+  --card-foreground: oklch(0.15 0.03 240);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.03 240);
+  --primary: oklch(0.55 0.2 260);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.95 0.01 240);
+  --secondary-foreground: oklch(0.15 0.03 240);
+  --muted: oklch(0.93 0.01 240);
+  --muted-foreground: oklch(0.45 0.02 240);
+  --accent: oklch(0.55 0.22 320);
+  --accent-foreground: oklch(1 0 0);
+  --border: oklch(0 0 0 / 0.08);
+  --input: oklch(0 0 0 / 0.05);
+  --ring: oklch(0.55 0.2 260);
+
+  --cyan: oklch(0.65 0.16 200);
+  --neon: oklch(0.6 0.18 220);
+  --purple: oklch(0.5 0.22 295);
+  --pink: oklch(0.55 0.25 0);
+  --success: oklch(0.6 0.18 145);
+  --warning: oklch(0.7 0.16 75);
+  --glass: oklch(1 0 0 / 0.8);
+
+  --gradient-aurora: linear-gradient(135deg, #00C3FF 0%, #7C3AED 50%, #EC4899 100%);
+  --gradient-cyan: linear-gradient(135deg, #00C3FF 0%, #0099FF 100%);
+  --gradient-purple: linear-gradient(135deg, #7C3AED 0%, #EC4899 100%);
+  --shadow-glow-cyan: 0 4px 20px -2px rgba(0, 195, 255, 0.15);
+  --shadow-glow-purple: 0 4px 20px -2px rgba(124, 58, 237, 0.15);
+  --shadow-glass: 0 8px 32px 0 rgba(15, 23, 42, 0.04);
+}
+
+.dark {
+  --background: oklch(0.13 0.04 270);
+  --foreground: oklch(0.97 0.01 250);
+  --card: oklch(0.18 0.04 270 / 0.6);
+  --card-foreground: oklch(0.97 0.01 250);
+  --popover: oklch(0.16 0.04 270);
+  --popover-foreground: oklch(0.97 0.01 250);
+  --primary: oklch(0.85 0.18 210);
+  --primary-foreground: oklch(0.13 0.04 270);
+  --secondary: oklch(0.24 0.05 280);
+  --secondary-foreground: oklch(0.97 0.01 250);
+  --muted: oklch(0.22 0.03 270);
+  --muted-foreground: oklch(0.68 0.03 260);
+  --accent: oklch(0.7 0.22 320);
+  --accent-foreground: oklch(0.97 0.01 250);
+  --border: oklch(1 0 0 / 0.08);
+  --input: oklch(1 0 0 / 0.1);
+  --ring: oklch(0.85 0.18 210);
+
+  --cyan: oklch(0.88 0.16 200);
+  --neon: oklch(0.82 0.17 220);
+  --purple: oklch(0.65 0.22 295);
+  --pink: oklch(0.7 0.27 0);
+  --success: oklch(0.72 0.18 150);
+  --warning: oklch(0.78 0.16 70);
+  --glass: oklch(1 0 0 / 0.04);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html, body {
+    background-color: var(--background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.05), transparent),
+      radial-gradient(ellipse 60% 50% at 80% 50%, rgba(124, 58, 237, 0.04), transparent),
+      radial-gradient(ellipse 60% 50% at 0% 80%, rgba(0, 195, 255, 0.03), transparent);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+  .dark body {
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 245, 255, 0.15), transparent),
+      radial-gradient(ellipse 60% 50% at 80% 50%, rgba(139, 92, 246, 0.12), transparent),
+      radial-gradient(ellipse 60% 50% at 0% 80%, rgba(255, 0, 170, 0.08), transparent);
+  }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
+}
+
+@utility glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.5));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+.dark .glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+@utility glass-strong {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.6));
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+.dark .glass-strong {
+  background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+@utility gradient-border {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(250,250,250,0.8)) padding-box,
+              linear-gradient(135deg, rgba(0, 195, 255, 0.2), rgba(124, 58, 237, 0.2), rgba(236, 72, 153, 0.2)) border-box;
+  border: 1px solid transparent;
+}
+.dark .gradient-border {
+  background: linear-gradient(180deg, rgba(11,17,32,0.7), rgba(5,8,22,0.7)) padding-box,
+              linear-gradient(135deg, #00F5FF55, #8B5CF655, #FF00AA55) border-box;
+}
+
+@utility text-gradient {
+  background: linear-gradient(135deg, #00B3FF 0%, #7C3AED 50%, #EC4899 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.dark .text-gradient {
+  background: linear-gradient(135deg, #00F5FF 0%, #8B5CF6 50%, #FF00AA 100%);
+}
+
+@utility glow-cyan {
+  box-shadow: 0 4px 16px -2px rgba(0, 195, 255, 0.2);
+}
+.dark .glow-cyan {
+  box-shadow: 0 0 24px -4px #00F5FF80, 0 0 60px -20px #00F5FF40;
+}
+
+@utility glow-purple {
+  box-shadow: 0 4px 16px -2px rgba(124, 58, 237, 0.2);
+}
+.dark .glow-purple {
+  box-shadow: 0 0 24px -4px #8B5CF680, 0 0 60px -20px #8B5CF640;
+}
+
+@utility glow-pink {
+  box-shadow: 0 4px 16px -2px rgba(236, 72, 153, 0.2);
+}
+.dark .glow-pink {
+  box-shadow: 0 0 24px -4px #FF00AA80;
+}
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.1) transparent;
+  &::-webkit-scrollbar { width: 6px; height: 6px; }
+  &::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 999px; }
+}
+.dark .scrollbar-thin {
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+  &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 4px 16px -2px rgba(0, 195, 255, 0.15); }
+  50% { box-shadow: 0 8px 32px -2px rgba(0, 195, 255, 0.3), 0 8px 40px -4px rgba(124, 58, 237, 0.15); }
+}
+
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@utility animate-float { animation: float 4s ease-in-out infinite; }
+@utility animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+@utility animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(0, 195, 255, 0.15), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s linear infinite;
+}
+.dark .animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(0,245,255,0.2), transparent);
+}
+
+
+/* Clever light theme overrides — flat selectors for LightningCSS compatibility */
+html:not(.dark) .bg-\[\#0b1530\],
+html:not(.dark) .bg-\[\#0b1530\]\/60,
+html:not(.dark) .bg-\[\#0b1530\]\/85,
+html:not(.dark) .bg-\[\#0d1322\],
+html:not(.dark) .bg-\[\#0d1322\]\/50,
+html:not(.dark) .bg-\[\#0d1322\]\/80,
+html:not(.dark) .bg-\[\#0d1322\]\/90,
+html:not(.dark) .bg-\[\#050816\],
+html:not(.dark) .bg-\[\#050816\]\/60,
+html:not(.dark) .bg-\[\#050816\]\/80,
+html:not(.dark) .bg-\[\#0e172e\],
+html:not(.dark) .bg-\[\#0e172e\]\/50,
+html:not(.dark) .bg-\[\#0a0f1d\],
+html:not(.dark) .bg-\[\#0a0f1d\]\/60,
+html:not(.dark) .bg-\[\#05050e\],
+html:not(.dark) .bg-\[\#060c1a\],
+html:not(.dark) .bg-\[\#091124\],
+html:not(.dark) .bg-\[\#0c1222\],
+html:not(.dark) .bg-\[\#0d1527\],
+html:not(.dark) .bg-\[\#020617\],
+html:not(.dark) .bg-\[\#020617\]\/60,
+html:not(.dark) .bg-\[\#020617\]\/80,
+html:not(.dark) .bg-\[\#020617\]\/90,
+html:not(.dark) .bg-\[\#090d16\],
+html:not(.dark) .bg-\[\#121826\] {
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+}
+
+html:not(.dark) .bg-\[\#070e20\],
+html:not(.dark) .bg-\[\#050d1f\],
+html:not(.dark) .bg-\[\#080e1d\],
+html:not(.dark) .bg-\[\#0f172a\] {
+  background-color: var(--muted) !important;
+  color: var(--foreground) !important;
+}
+
+html:not(.dark) .bg-slate-800\/40,
+html:not(.dark) .bg-slate-800\/60,
+html:not(.dark) .bg-slate-900\/40,
+html:not(.dark) .bg-slate-900\/60,
+html:not(.dark) .bg-black\/30,
+html:not(.dark) .bg-black\/40,
+html:not(.dark) .bg-white\/5,
+html:not(.dark) .bg-white\/10,
+html:not(.dark) .bg-white\/15,
+html:not(.dark) .hover\:bg-slate-800\/60:hover,
+html:not(.dark) .hover\:bg-slate-800\/40:hover,
+html:not(.dark) .hover\:bg-white\/5:hover,
+html:not(.dark) .hover\:bg-white\/10:hover,
+html:not(.dark) .hover\:bg-white\/15:hover {
+  background-color: var(--secondary) !important;
+  color: var(--foreground) !important;
+}
+
+html:not(.dark) .border-blue-500\/20,
+html:not(.dark) .border-white\/5,
+html:not(.dark) .border-white\/10,
+html:not(.dark) .border-slate-700\/40,
+html:not(.dark) .border-blue-400\/40,
+html:not(.dark) .border-blue-500\/10,
+html:not(.dark) .border-\[\#00F5FF\]\/30,
+html:not(.dark) .border-\[\#00f5ff\]\/20,
+html:not(.dark) .border-\[\#00F5FF\]\/25,
+html:not(.dark) .border-\[\#00F5FF\]\/10,
+html:not(.dark) .border-\[\#00F5FF\]\/45,
+html:not(.dark) .border-\[\#00F5FF\]\/40,
+html:not(.dark) .border-\[\#00F5FF\]\/50,
+html:not(.dark) .border-slate-700\/30,
+html:not(.dark) .border-slate-750,
+html:not(.dark) .border-slate-800,
+html:not(.dark) .border-white\/20,
+html:not(.dark) .border-white\/30,
+html:not(.dark) .border-white\/40,
+html:not(.dark) .border-\[\#00f5ff\]\/20,
+html:not(.dark) .border-\[\#00f5ff\]\/30,
+html:not(.dark) .border-\[\#00f5ff\]\/45,
+html:not(.dark) .border-\[\#00f5ff\]\/50 {
+  border-color: var(--border) !important;
+}
+
+html:not(.dark) .text-white {
+  color: var(--foreground) !important;
+}
+
+html:not(.dark) .text-white\/50,
+html:not(.dark) .text-white\/60,
+html:not(.dark) .text-white\/70,
+html:not(.dark) .text-white\/80,
+html:not(.dark) .text-white\/90,
+html:not(.dark) .hover\:text-white:hover,
+html:not(.dark) .text-\[\#dde2f8\],
+html:not(.dark) .text-\[\#e9feff\] {
+  color: var(--foreground) !important;
+}
+
+/* Ensure white text remains white on active colored elements like buttons */
+html:not(.dark) button.text-white,
+html:not(.dark) a.text-white,
+html:not(.dark) .bg-primary .text-white,
+html:not(.dark) .bg-indigo-600 .text-white,
+html:not(.dark) .bg-indigo-700 .text-white,
+html:not(.dark) .bg-purple-600 .text-white,
+html:not(.dark) .bg-purple-700 .text-white,
+html:not(.dark) .bg-red-500 .text-white,
+html:not(.dark) .bg-emerald-600 .text-white,
+html:not(.dark) .bg-rose-600 .text-white,
+html:not(.dark) .bg-amber-600 .text-white,
+html:not(.dark) .bg-gradient-to-r.text-white,
+html:not(.dark) .bg-gradient-to-br.text-white,
+html:not(.dark) .text-primary-foreground {
+  color: #ffffff !important;
+}
+
+html:not(.dark) .text-slate-300,
+html:not(.dark) .text-slate-200,
+html:not(.dark) .text-slate-100,
+html:not(.dark) .text-slate-400,
+html:not(.dark) .text-slate-500,
+html:not(.dark) .text-gray-300,
+html:not(.dark) .text-gray-400,
+html:not(.dark) .text-zinc-300,
+html:not(.dark) .text-zinc-400,
+html:not(.dark) .text-neutral-300,
+html:not(.dark) .text-neutral-400,
+html:not(.dark) .text-blue-200\/50,
+html:not(.dark) .text-blue-200\/60,
+html:not(.dark) .text-blue-200\/70,
+html:not(.dark) .text-blue-300\/50,
+html:not(.dark) .text-blue-300\/60,
+html:not(.dark) .text-blue-300\/70,
+html:not(.dark) .text-blue-300\/80,
+html:not(.dark) .text-blue-200\/80,
+html:not(.dark) .text-blue-200,
+html:not(.dark) .text-blue-300,
+html:not(.dark) .text-blue-100 {
+  color: var(--muted-foreground) !important;
+}
+
+html:not(.dark) .placeholder-slate-500::placeholder,
+html:not(.dark) .placeholder\:text-slate-500::placeholder,
+html:not(.dark) .placeholder\:text-muted-foreground\/60::placeholder {
+  color: color-mix(in oklch, var(--muted-foreground) 80%, transparent) !important;
+}
+
+html:not(.dark) pre.bg-slate-900,
+html:not(.dark) pre.bg-slate-900\/60,
+html:not(.dark) code.bg-slate-900,
+html:not(.dark) code.bg-slate-900\/60 {
+  background-color: oklch(0.18 0.03 255) !important;
+  color: oklch(0.94 0.01 255) !important;
+}
