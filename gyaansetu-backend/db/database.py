@@ -15,45 +15,61 @@ logger = logging.getLogger("gyaansetu.db")
 current_user_id: ContextVar[str] = ContextVar("current_user_id", default="default")
 
 
+def _sanitize(user_id: str) -> str:
+    """Sanitize a user_id string to be safe for filenames and DB keys."""
+    safe = "".join(c for c in user_id if c.isalnum() or c in "_").strip()
+    return safe if safe else "default"
+
+
+def get_safe_user_id() -> str:
+    """Return the sanitized user_id from the current request context.
+    Routers should call this instead of using req.user_id directly for DB operations.
+    """
+    return _sanitize(current_user_id.get())
+
+
 def get_connection() -> sqlite3.Connection:
     user_id = current_user_id.get()
-    
+
     # Sanitize user_id to prevent directory traversal
-    safe_user_id = "".join(c for c in user_id if c.isalnum() or c in "-_").strip()
-    if not safe_user_id:
-        safe_user_id = "default"
-        
+    safe_user_id = _sanitize(user_id)
+
     db_dir = Path("./db_users")
     db_dir.mkdir(exist_ok=True)
-    
+
     db_path = db_dir / f"user_{safe_user_id}.db"
-    db_exists = db_path.exists()
-    
+
     conn = sqlite3.connect(db_path, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA foreign_keys=ON")
-    
+    # Disable foreign keys during schema setup to avoid bootstrap ordering issues
+    conn.execute("PRAGMA foreign_keys=OFF")
+
     try:
         _run_schema(conn)
         try:
             conn.execute("ALTER TABLE ai_projects ADD COLUMN tag TEXT DEFAULT ''")
             conn.commit()
         except Exception:
-            pass # already exists
-        # Ensure user row exists to prevent foreign key errors
+            pass  # column already exists — ignore
+
+        # Ensure the user row exists BEFORE enabling foreign keys
+        # CRITICAL FIX: use safe_user_id consistently for both the row id and the lookup
         cursor = conn.cursor()
-        cursor.execute("SELECT 1 FROM users WHERE id = ?", (user_id,))
+        cursor.execute("SELECT 1 FROM users WHERE id = ?", (safe_user_id,))
         if not cursor.fetchone():
             cursor.execute(
                 """INSERT INTO users (id, email, name, password_hash, salt)
                    VALUES (?, ?, ?, '', '')""",
-                (user_id, f"{safe_user_id}@gyaansetu.ai", safe_user_id.capitalize())
+                (safe_user_id, f"{safe_user_id}@gyaansetu.ai", safe_user_id.capitalize())
             )
+            logger.info(f"Auto-created user row for '{safe_user_id}'")
         conn.commit()
     except Exception as e:
-        logger.error(f"Failed to ensure schema tables for user '{safe_user_id}': {e}")
-        
+        logger.error(f"Failed to ensure schema/user for '{safe_user_id}': {e}")
+
+    # Now enable foreign keys for all subsequent operations in this connection
+    conn.execute("PRAGMA foreign_keys=ON")
     return conn
 
 

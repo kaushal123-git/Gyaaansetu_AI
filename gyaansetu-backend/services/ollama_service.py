@@ -8,7 +8,7 @@ Models used:
   gemma3         → creative content, career descriptions, flashcards
 """
 
-import os, json, logging, httpx, asyncio
+import os, json, logging, httpx, asyncio, re
 from typing import AsyncGenerator, Literal
 from dotenv import load_dotenv
 
@@ -171,6 +171,16 @@ async def list_models() -> list[str]:
         return []
 
 
+def _is_greeting(prompt: str) -> bool:
+    cleaned = re.sub(r'[^\w\s]', '', prompt.lower()).strip()
+    greetings = {
+        "hello", "hi", "hey", "greetings", "yo", "howdy", "hola", "namaste", 
+        "good morning", "good afternoon", "good evening", "hi there", "hello there",
+        "helllo", "helloo", "hey there"
+    }
+    return cleaned in greetings
+
+
 async def stream_chat(
     prompt: str,
     task: TaskType = "tutor",
@@ -180,7 +190,16 @@ async def stream_chat(
 ) -> AsyncGenerator[str, None]:
     """Stream tokens from Ollama for a given prompt."""
     model = await get_best_available_model(task)
-    system_prompt = _append_language_instruction(system, language) if system else _build_system_prompt(mode, language)
+    if task == "tutor" and not system and _is_greeting(prompt):
+        system_prompt = _append_language_instruction(
+            "You are GyaanSetu AI, a helpful and friendly local AI tutor companion. "
+            "The user is greeting you. Respond with a warm, friendly greeting in the requested language, "
+            "introduce yourself as GyaanSetu AI, and ask what topic they would like to learn, prepare for, or revise today. "
+            "Keep it concise. Do not explain any academic topics yet.",
+            language
+        )
+    else:
+        system_prompt = _append_language_instruction(system, language) if system else _build_system_prompt(mode, language)
 
     # Lower temperature for rigorous academic modes, standard for creative
     temp = 0.3 if mode in ["Exam Preparation", "Deep Learning", "Competitive Exam Mode", "Interview Mode"] else 0.7
@@ -235,7 +254,16 @@ async def complete(
 ) -> str:
     """Blocking completion — collects all tokens and returns full string."""
     model = await get_best_available_model(task)
-    system_prompt = _append_language_instruction(system, language) if system else _build_system_prompt(mode, language)
+    if task == "tutor" and not system and _is_greeting(prompt):
+        system_prompt = _append_language_instruction(
+            "You are GyaanSetu AI, a helpful and friendly local AI tutor companion. "
+            "The user is greeting you. Respond with a warm, friendly greeting in the requested language, "
+            "introduce yourself as GyaanSetu AI, and ask what topic they would like to learn, prepare for, or revise today. "
+            "Keep it concise. Do not explain any academic topics yet.",
+            language
+        )
+    else:
+        system_prompt = _append_language_instruction(system, language) if system else _build_system_prompt(mode, language)
 
     temp = 0.3 if mode in ["Exam Preparation", "Deep Learning", "Competitive Exam Mode", "Interview Mode"] else 0.7
 

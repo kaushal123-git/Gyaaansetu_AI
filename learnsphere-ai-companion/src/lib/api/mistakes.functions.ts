@@ -1,12 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { db, generateUUID } from "../db.server";
+import { getDbForUser, generateUUID } from "../db.server";
 
 // Loads mistake logs for a user
 export const loadMistakes = createServerFn({ method: "GET" })
   .inputValidator(z.object({ userId: z.string() }))
   .handler(async ({ data }) => {
     const { userId } = data;
+    const db = getDbForUser(userId);
 
     const mistakes = db.prepare("SELECT * FROM mistakes WHERE user_id = ?").all(userId) as any[];
 
@@ -40,6 +41,7 @@ export const logNewMistake = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { userId, topic, frequency, type, explanation, correction, sampleQuestion, options, correctIdx } = data;
+    const db = getDbForUser(userId);
     const id = generateUUID();
 
     db.prepare(`
@@ -65,10 +67,12 @@ export const practiceMistakeCorrect = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
       id: z.string(),
+      userId: z.string(),
     })
   )
   .handler(async ({ data }) => {
-    const { id } = data;
+    const { id, userId } = data;
+    const db = getDbForUser(userId);
 
     db.prepare(`
       UPDATE mistakes

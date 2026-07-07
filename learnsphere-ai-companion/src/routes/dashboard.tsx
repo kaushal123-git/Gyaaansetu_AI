@@ -446,7 +446,7 @@ function Dashboard() {
                       key={t.id} 
                       onClick={async () => {
                         try {
-                          const updated = await apiToggleTask({ data: { id: t.id, completed: !t.completed } });
+                          const updated = await apiToggleTask({ data: { id: t.id, completed: !t.completed, userId } });
                           setTasks(tasks.map(x => x.id === t.id ? { ...x, completed: updated.completed } : x));
                           setCoursesDone(updated.stats.coursesDone);
                           setMasteryScore(updated.stats.masteryScore);

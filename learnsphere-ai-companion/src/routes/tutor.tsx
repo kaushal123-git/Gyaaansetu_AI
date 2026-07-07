@@ -53,6 +53,8 @@ function Tutor() {
   const [ingesting, setIngesting] = useState(false);
   const [uploadPreview, setUploadPreview] = useState<string | null>(null);
   const [pendingImage, setPendingImage] = useState<File | null>(null);
+  const [pendingAudioBlob, setPendingAudioBlob] = useState<Blob | null>(null);
+  const [pendingAudioUrl, setPendingAudioUrl] = useState<string | null>(null);
 
   // Chat sessions state
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -263,12 +265,67 @@ function Tutor() {
   };
 
   // ── Voice recording ────────────────────────────────────────────────────────
+  const discardVoice = () => {
+    if (pendingAudioUrl) {
+      URL.revokeObjectURL(pendingAudioUrl);
+    }
+    setPendingAudioBlob(null);
+    setPendingAudioUrl(null);
+  };
+
+  const sendVoice = async () => {
+    if (!pendingAudioBlob || streaming) return;
+
+    const blob = pendingAudioBlob;
+    const audioUrlToClean = pendingAudioUrl;
+
+    // Clear voice confirmation state
+    setPendingAudioBlob(null);
+    setPendingAudioUrl(null);
+
+    setMessages(prev => [...prev, { role: "user", text: "🎙️ Voice message sent…" }]);
+
+    if (backendOnline === false) {
+      addAiMessage("⚠️ AI backend offline — voice requires the FastAPI server.");
+      return;
+    }
+
+    setStreaming(true);
+    addAiMessage("🎧 Processing voice…", { isStreaming: true });
+    try {
+      const res = await tutorVoiceChat(blob, lang, mode, userId);
+      setMessages(prev => {
+        const copy = [...prev];
+        const last = copy[copy.length - 1];
+        if (last?.role === "ai") {
+          copy[copy.length - 1] = {
+            ...last,
+            text: `**You said:** "${res.transcript}"\n\n${res.response}`,
+            isStreaming: false,
+            audioUrl: res.audio_url ?? undefined,
+          };
+        }
+        return copy;
+      });
+    } catch {
+      appendToLastAi("\n\n⚠️ Voice pipeline error. Is Whisper & Piper installed?");
+    }
+    setStreaming(false);
+
+    if (audioUrlToClean) {
+      URL.revokeObjectURL(audioUrlToClean);
+    }
+  };
+
   const toggleRecording = async () => {
     if (recording) {
       mediaRecorderRef.current?.stop();
       setRecording(false);
       return;
     }
+
+    discardVoice();
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mr = new MediaRecorder(stream);
@@ -279,34 +336,9 @@ function Tutor() {
       mr.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
         const blob = new Blob(audioChunksRef.current, { type: "audio/wav" });
-        setMessages(prev => [...prev, { role: "user", text: "🎙️ Voice message sent…" }]);
-
-        if (backendOnline === false) {
-          addAiMessage("⚠️ AI backend offline — voice requires the FastAPI server.");
-          return;
-        }
-
-        setStreaming(true);
-        addAiMessage("🎧 Processing voice…", { isStreaming: true });
-        try {
-          const res = await tutorVoiceChat(blob, lang, mode, userId);
-          setMessages(prev => {
-            const copy = [...prev];
-            const last = copy[copy.length - 1];
-            if (last?.role === "ai") {
-              copy[copy.length - 1] = {
-                ...last,
-                text: `**You said:** "${res.transcript}"\n\n${res.response}`,
-                isStreaming: false,
-                audioUrl: res.audio_url ?? undefined,
-              };
-            }
-            return copy;
-          });
-        } catch {
-          appendToLastAi("\n\n⚠️ Voice pipeline error. Is Whisper & Piper installed?");
-        }
-        setStreaming(false);
+        const url = URL.createObjectURL(blob);
+        setPendingAudioBlob(blob);
+        setPendingAudioUrl(url);
       };
 
       mr.start();
@@ -315,6 +347,15 @@ function Tutor() {
       addAiMessage("⚠️ Microphone access denied.");
     }
   };
+
+  // Revoke object URLs on component unmount to prevent leaks
+  useEffect(() => {
+    return () => {
+      if (pendingAudioUrl) {
+        URL.revokeObjectURL(pendingAudioUrl);
+      }
+    };
+  }, [pendingAudioUrl]);
 
   // ── Image upload + OCR solve ───────────────────────────────────────────────
   const handleImageUpload = async (file: File) => {
@@ -588,53 +629,92 @@ function Tutor() {
 
           {/* Input bar */}
           <div className="p-4 border-t border-white/5">
-            <div className="bg-slate-900/50 border border-slate-700/40 rounded-2xl p-2 flex items-end gap-1">
-              {/* Image attach */}
-              <label className="p-2 rounded-lg hover:bg-white/5 text-blue-200 cursor-pointer" title="Attach image">
-                <Paperclip className="h-4 w-4" />
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); e.target.value = ""; }}
+            {pendingAudioUrl ? (
+              <div className="bg-slate-900/50 border border-slate-700/40 rounded-2xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 w-full animate-fadeIn">
+                <div className="flex items-center gap-3 w-full sm:flex-1 min-w-0">
+                  <div className="h-9 w-9 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center shrink-0">
+                    <Mic className="h-4.5 w-4.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] text-blue-300 font-mono tracking-wider font-semibold uppercase mb-1">
+                      Preview Recorded Voice
+                    </div>
+                    <audio
+                      src={pendingAudioUrl}
+                      controls
+                      className="w-full h-8 opacity-90 accent-cyan-500 rounded-lg"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+                  <button
+                    onClick={discardVoice}
+                    className="flex-1 sm:flex-none py-2 px-3.5 rounded-xl bg-slate-800/80 border border-slate-700/40 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 text-blue-200 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1.5"
+                    title="Discard recording"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Discard</span>
+                  </button>
+                  <button
+                    onClick={sendVoice}
+                    disabled={streaming}
+                    className="flex-1 sm:flex-none py-2 px-4 rounded-xl bg-gradient-to-r from-[#00F5FF] to-[#8B5CF6] text-[#050816] font-bold text-xs shadow-md hover:opacity-90 disabled:opacity-40 transition-all duration-200 flex items-center justify-center gap-1.5 glow-cyan"
+                    title="Send voice message"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    <span>Send Audio</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-slate-900/50 border border-slate-700/40 rounded-2xl p-2 flex items-end gap-1">
+                {/* Image attach */}
+                <label className="p-2 rounded-lg hover:bg-white/5 text-blue-200 cursor-pointer" title="Attach image">
+                  <Paperclip className="h-4 w-4" />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); e.target.value = ""; }}
+                  />
+                </label>
+
+                {/* Camera (same as file but accept camera) */}
+                <label className="p-2 rounded-lg hover:bg-white/5 text-blue-200 cursor-pointer" title="Take photo">
+                  <Camera className="h-4 w-4" />
+                  <input type="file" accept="image/*" capture="environment" className="hidden"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); e.target.value = ""; }}
+                  />
+                </label>
+
+                {/* Voice */}
+                <button
+                  onClick={toggleRecording}
+                  className={`p-2 rounded-lg transition ${recording ? "bg-red-500/20 text-red-400 animate-pulse" : "hover:bg-white/5 text-blue-200"}`}
+                  title={recording ? "Stop recording" : "Voice input"}
+                >
+                  {recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </button>
+
+                <textarea
+                  rows={1}
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+                  placeholder={recording ? "Recording… click ⬛ to stop" : "Ask anything — text, image, voice, or PDF…"}
+                  className="flex-1 bg-transparent outline-none resize-none px-2 py-2 text-sm text-white placeholder:text-slate-500"
                 />
-              </label>
 
-              {/* Camera (same as file but accept camera) */}
-              <label className="p-2 rounded-lg hover:bg-white/5 text-blue-200 cursor-pointer" title="Take photo">
-                <Camera className="h-4 w-4" />
-                <input type="file" accept="image/*" capture="environment" className="hidden"
-                  onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); e.target.value = ""; }}
-                />
-              </label>
-
-              {/* Voice */}
-              <button
-                onClick={toggleRecording}
-                className={`p-2 rounded-lg transition ${recording ? "bg-red-500/20 text-red-400 animate-pulse" : "hover:bg-white/5 text-blue-200"}`}
-                title={recording ? "Stop recording" : "Voice input"}
-              >
-                {recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              </button>
-
-              <textarea
-                rows={1}
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-                placeholder={recording ? "Recording… click ⬛ to stop" : "Ask anything — text, image, voice, or PDF…"}
-                className="flex-1 bg-transparent outline-none resize-none px-2 py-2 text-sm text-white placeholder:text-slate-500"
-              />
-
-              <button
-                onClick={() => send()}
-                disabled={streaming || (!input.trim() && !recording)}
-                className="rounded-lg bg-gradient-to-r from-[#00F5FF] to-[#8B5CF6] p-2 text-[#050816] glow-cyan disabled:opacity-40 transition"
-              >
-                {streaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              </button>
-            </div>
+                <button
+                  onClick={() => send()}
+                  disabled={streaming || (!input.trim() && !recording)}
+                  className="rounded-lg bg-gradient-to-r from-[#00F5FF] to-[#8B5CF6] p-2 text-[#050816] glow-cyan disabled:opacity-40 transition"
+                >
+                  {streaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </button>
+              </div>
+            )}
           </div>
         </GlassCard>
 

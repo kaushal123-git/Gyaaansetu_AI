@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
     return {
       base: '/dev-interview-bot/',
       server: {
-        port: 3000,
+        port: 5180,
         host: '0.0.0.0',
         watch: {
           ignored: ['**/dist/**'],

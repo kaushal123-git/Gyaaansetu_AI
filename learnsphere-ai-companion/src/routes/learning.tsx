@@ -89,7 +89,7 @@ function LearningDashboard() {
     }
     
     try {
-      await updateCourseProgress({ data: { id: reactCourse.id, progress: 88, tag: "88% done" } });
+      await updateCourseProgress({ data: { id: reactCourse.id, progress: 88, tag: "88% done", userId } });
       setCourses(prev => prev.map(c => {
         if (c.id === reactCourse.id) {
           return { ...c, progress: 88, tag: "88% done" };

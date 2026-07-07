@@ -123,7 +123,7 @@ function CertificateVault() {
     e.stopPropagation();
     if (confirm("Are you sure you want to delete this certificate record?")) {
       try {
-        await deleteCertificate({ data: { id } });
+        await deleteCertificate({ data: { id, userId } });
         setCerts(prev => prev.filter(c => c.id !== id));
         showToast("Certificate deleted successfully", Trash2);
       } catch (err) {
@@ -158,7 +158,7 @@ function CertificateVault() {
         // Edit is currently represented as local/simple update since the backend creates a new entry.
         // Let's also save/override it on the DB side if needed by calling saveCertificate (we will support this as simulated backend update).
         // Since we delete & re-add or simply mock edit save:
-        await deleteCertificate({ data: { id: selectedCert.id } });
+        await deleteCertificate({ data: { id: selectedCert.id, userId } });
         const payload = {
           userId,
           title: formTitle,

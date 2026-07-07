@@ -167,12 +167,40 @@ export async function tutorChatStream(
         if (!cleaned) continue;
 
         if (cleaned.startsWith("data: ")) {
-          const rawPayload = cleaned.slice(6);
+          const rawPayload = cleaned.slice(6).trim();
+
+          // Legacy plain [DONE] sentinel
           if (rawPayload === "[DONE]") {
             callbacks.onDone();
             return;
           }
-          callbacks.onToken(rawPayload);
+
+          // Parse the JSON envelope the backend sends:
+          // { "token": "...", "done": false } or { "token": "", "done": true }
+          try {
+            const parsed = JSON.parse(rawPayload) as {
+              token?: string;
+              done?: boolean;
+              error?: string;
+            };
+
+            if (parsed.error) {
+              callbacks.onError(parsed.error);
+              return;
+            }
+
+            if (parsed.done) {
+              callbacks.onDone();
+              return;
+            }
+
+            if (parsed.token) {
+              callbacks.onToken(parsed.token);
+            }
+          } catch {
+            // Fallback: treat entire payload as a plain-text token
+            if (rawPayload) callbacks.onToken(rawPayload);
+          }
         }
       }
     }
@@ -181,6 +209,7 @@ export async function tutorChatStream(
     callbacks.onError(err.message ?? "Network error — is the AI backend running?");
   }
 }
+
 
 /**
  * Send audio to Whisper STT → Ollama → Piper TTS pipeline.

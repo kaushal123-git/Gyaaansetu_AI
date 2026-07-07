@@ -13,6 +13,18 @@ router = APIRouter()
 logger = logging.getLogger("gyaansetu.health")
 
 
+@router.get("")
+@router.get("/")
+async def health_check():
+    """Check system and Ollama status."""
+    ollama_connected = await ollama_service.check_ollama_health()
+    return {
+        "status": "online",
+        "version": "2.0.0",
+        "ollama_connected": ollama_connected
+    }
+
+
 class HealthSyncRequest(BaseModel):
     user_id: str = "demo-user-aarav"
     screen_hours: float = 0

@@ -1,12 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { db } from "../db.server";
+import { getDbForUser } from "../db.server";
 
 // Loads courses
 export const loadCourses = createServerFn({ method: "GET" })
   .inputValidator(z.object({ userId: z.string() }))
   .handler(async ({ data }) => {
     const { userId } = data;
+    const db = getDbForUser(userId);
 
     const courses = db.prepare("SELECT * FROM courses WHERE user_id = ?").all(userId) as any[];
 
@@ -28,10 +29,12 @@ export const updateCourseProgress = createServerFn({ method: "POST" })
       id: z.string(),
       progress: z.number(),
       tag: z.string(),
+      userId: z.string(),
     })
   )
   .handler(async ({ data }) => {
-    const { id, progress, tag } = data;
+    const { id, progress, tag, userId } = data;
+    const db = getDbForUser(userId);
 
     db.prepare(`
       UPDATE courses

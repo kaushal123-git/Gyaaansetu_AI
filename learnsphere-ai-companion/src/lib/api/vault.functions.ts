@@ -1,12 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { db, generateUUID } from "../db.server";
+import { getDbForUser, generateUUID } from "../db.server";
 
 // Loads certificates
 export const loadCertificates = createServerFn({ method: "GET" })
   .inputValidator(z.object({ userId: z.string() }))
   .handler(async ({ data }) => {
     const { userId } = data;
+    const db = getDbForUser(userId);
 
     const certs = db.prepare("SELECT * FROM certificates WHERE user_id = ? ORDER BY date DESC").all(userId) as any[];
 
@@ -38,6 +39,7 @@ export const saveCertificate = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { userId, title, event, date, issuer, fileName, fileType, grade } = data;
+    const db = getDbForUser(userId);
     const id = generateUUID();
 
     db.prepare(`
@@ -62,10 +64,12 @@ export const deleteCertificate = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
       id: z.string(),
+      userId: z.string(),
     })
   )
   .handler(async ({ data }) => {
-    const { id } = data;
+    const { id, userId } = data;
+    const db = getDbForUser(userId);
 
     db.prepare("DELETE FROM certificates WHERE id = ?").run(id);
 

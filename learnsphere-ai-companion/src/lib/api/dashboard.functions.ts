@@ -1,12 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { db, generateUUID } from "../db.server";
+import { getDbForUser, generateUUID } from "../db.server";
 
 // Loads stats and tasks for a given user
 export const loadDashboardData = createServerFn({ method: "GET" })
   .inputValidator(z.object({ userId: z.string() }))
   .handler(async ({ data }) => {
     const { userId } = data;
+    const db = getDbForUser(userId);
 
     // 1. Fetch Stats
     const statsStmt = db.prepare("SELECT * FROM user_stats WHERE user_id = ?");
@@ -52,6 +53,7 @@ export const addTask = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { userId, text } = data;
+    const db = getDbForUser(userId);
     const id = generateUUID();
 
     db.prepare(`
@@ -67,11 +69,12 @@ export const toggleTask = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
       id: z.string(),
-      completed: z.boolean(),
+      userId: z.string(),
     })
   )
   .handler(async ({ data }) => {
-    const { id, completed } = data;
+    const { id, userId } = data;
+    const db = getDbForUser(userId);
     const task = db.prepare("SELECT user_id, completed FROM tasks WHERE id = ?").get(id) as any;
 
     if (!task) {
@@ -79,24 +82,25 @@ export const toggleTask = createServerFn({ method: "POST" })
     }
 
     const wasCompleted = task.completed === 1;
+    const newCompleted = !wasCompleted;
     db.prepare(`
       UPDATE tasks SET completed = ? WHERE id = ?
-    `).run(completed ? 1 : 0, id);
+    `).run(newCompleted ? 1 : 0, id);
 
-    if (wasCompleted !== completed) {
+    if (wasCompleted !== newCompleted) {
       db.prepare(`
         UPDATE user_stats
         SET courses_done = MAX(0, courses_done + ?),
             mastery_score = MIN(100, MAX(0, mastery_score + ?))
         WHERE user_id = ?
-      `).run(completed ? 1 : -1, completed ? 1 : -1, task.user_id);
+      `).run(newCompleted ? 1 : -1, newCompleted ? 1 : -1, userId);
     }
 
-    const stats = db.prepare("SELECT * FROM user_stats WHERE user_id = ?").get(task.user_id) as any;
+    const stats = db.prepare("SELECT * FROM user_stats WHERE user_id = ?").get(userId) as any;
 
     return {
       id,
-      completed,
+      completed: newCompleted,
       stats: {
         coursesDone: stats?.courses_done ?? 0,
         masteryScore: stats?.mastery_score ?? 0,
@@ -106,9 +110,10 @@ export const toggleTask = createServerFn({ method: "POST" })
 
 // Deletes a task
 export const deleteTask = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ id: z.string() }))
+  .inputValidator(z.object({ id: z.string(), userId: z.string() }))
   .handler(async ({ data }) => {
-    const { id } = data;
+    const { id, userId } = data;
+    const db = getDbForUser(userId);
     db.prepare("DELETE FROM tasks WHERE id = ?").run(id);
     return { id };
   });
@@ -123,6 +128,7 @@ export const completeFocusSession = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { userId, hoursIncrement } = data;
+    const db = getDbForUser(userId);
 
     db.prepare(`
       UPDATE user_stats

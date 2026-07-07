@@ -1,4 +1,4 @@
-﻿node_modules/
+node_modules/
 dist/
 .env
 .env.local
@@ -11,3 +11,20 @@ yarn-error.log*
 Thumbs.db
 .vite/
 coverage/
+
+# Python Virtual Environments & Pycache
+venv/
+.venv/
+gyaansetu-backend/venv/
+**/venv/
+**/__pycache__/
+*.pyc
+
+# Local databases and logs
+chroma_store/
+.run-logs/
+*.db
+*.sqlite
+**/db_users/
+db_users/
+

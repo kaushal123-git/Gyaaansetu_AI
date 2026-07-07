@@ -138,7 +138,7 @@ function MistakeDashboard() {
       showToast("Correct Answer! Concept mastered. +50 XP", Award);
       try {
         // Reduce frequency of mistake in SQLite DB
-        await practiceMistakeCorrect({ data: { id: selectedMistake.id } });
+        await practiceMistakeCorrect({ data: { id: selectedMistake.id, userId } });
         setActiveMistakes(prev => prev.map(m => {
           if (m.id === selectedMistake.id) {
             return { ...m, frequency: Math.max(0, m.frequency - 1) };
