@@ -70,7 +70,34 @@ function Tutor() {
   const ragInputRef      = useRef<HTMLInputElement>(null);
   const userId = getUserId();
 
-  // Load sessions on mount & health checks
+  // Poll backend health and RAG stats every 10 seconds
+  useEffect(() => {
+    let active = true;
+    const verifyHealth = async () => {
+      try {
+        const health = await checkBackendHealth();
+        if (!active) return;
+        setBackendOnline(health.status === "online");
+      } catch {
+        if (active) setBackendOnline(false);
+      }
+      try {
+        if (userId) {
+          const stats = await ragGetStats(userId);
+          if (active) setRagStats(stats);
+        }
+      } catch {}
+    };
+
+    verifyHealth();
+    const interval = setInterval(verifyHealth, 10000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [userId]);
+
+  // Load sessions on mount
   useEffect(() => {
     if (window.innerWidth >= 1024) {
       setShowHistory(true);
@@ -80,9 +107,6 @@ function Tutor() {
       window.location.href = "/auth";
       return;
     }
-
-    checkBackendHealth().then(health => setBackendOnline(health.status === "online")).catch(() => setBackendOnline(false));
-    ragGetStats(userId).then(setRagStats).catch(() => {});
 
     try {
       const stored = localStorage.getItem("gyaansetu_tutor_sessions");
