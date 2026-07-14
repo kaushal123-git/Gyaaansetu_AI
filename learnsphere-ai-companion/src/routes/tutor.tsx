@@ -12,6 +12,7 @@ import {
   tutorChatStream, tutorVoiceChat, solveImageQuestion,
   ragIngestFile, ragGetStats, checkBackendHealth, type RagStats
 } from "@/lib/api/ai.service";
+import { ArchitectureTrace } from "@/components/tutor/ArchitectureTrace";
 
 export const Route = createFileRoute("/tutor")({
   head: () => ({ meta: [{ title: "AI Tutor — GyaanSetu AI" }] }),
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/tutor")({
 const langs = ["English","Hindi","Marathi","Gujarati","Tamil","Telugu","Bengali","Kannada","Malayalam","Punjabi"];
 const modes = ["Explain Like I'm 10","Exam Preparation","Quick Revision","Deep Learning","Competitive Exam Mode","Interview Mode"];
 
-type Msg = { role: "user" | "ai"; text: string; isStreaming?: boolean; audioUrl?: string; imageUrl?: string };
+type Msg = { role: "user" | "ai"; text: string; isStreaming?: boolean; audioUrl?: string; imageUrl?: string; trace?: any };
 
 function getUserId() {
   try { return JSON.parse(localStorage.getItem("gyaansetu_user") || "{}").id || ""; }
@@ -80,7 +81,7 @@ function Tutor() {
       return;
     }
 
-    checkBackendHealth().then(setBackendOnline);
+    checkBackendHealth().then(health => setBackendOnline(health.status === "online")).catch(() => setBackendOnline(false));
     ragGetStats(userId).then(setRagStats).catch(() => {});
 
     try {
@@ -224,11 +225,11 @@ function Tutor() {
     });
   };
 
-  const finaliseStream = () => {
+  const finaliseStream = (trace?: any) => {
     setMessages(prev => {
       const copy = [...prev];
       const last = copy[copy.length - 1];
-      if (last?.role === "ai") copy[copy.length - 1] = { ...last, isStreaming: false };
+      if (last?.role === "ai") copy[copy.length - 1] = { ...last, isStreaming: false, trace };
       return copy;
     });
     setStreaming(false);
@@ -303,6 +304,7 @@ function Tutor() {
             text: `**You said:** "${res.transcript}"\n\n${res.response}`,
             isStreaming: false,
             audioUrl: res.audio_url ?? undefined,
+            trace: res.trace,
           };
         }
         return copy;
@@ -385,6 +387,7 @@ function Tutor() {
             ...last,
             text: `**Extracted text:** "${res.extracted_text}"\n\n${res.solution}`,
             isStreaming: false,
+            trace: res.trace,
           };
         }
         return copy;
@@ -612,6 +615,9 @@ function Tutor() {
                         <span className="inline-block w-1.5 h-4 bg-[#00F5FF] ml-1 animate-pulse rounded-sm" />
                       )}
                     </div>
+                    {m.role === "ai" && m.trace && (
+                      <ArchitectureTrace trace={m.trace} />
+                    )}
                     {m.audioUrl && (
                       <audio controls src={`http://localhost:8000${m.audioUrl}`} className="h-8 w-48 opacity-80" />
                     )}

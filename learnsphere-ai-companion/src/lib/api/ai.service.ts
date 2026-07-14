@@ -18,7 +18,7 @@ export interface ChatRequest {
 
 export interface ChatStreamCallback {
   onToken: (token: string) => void;
-  onDone: () => void;
+  onDone: (trace?: any) => void;
   onError: (error: string) => void;
 }
 
@@ -35,6 +35,7 @@ export interface TutorVoiceResult {
   audio_url: string | null;
   tts_success: boolean;
   stt_confidence: number;
+  trace?: any;
 }
 
 export interface RoadmapResult {
@@ -182,6 +183,7 @@ export async function tutorChatStream(
               token?: string;
               done?: boolean;
               error?: string;
+              trace?: any;
             };
 
             if (parsed.error) {
@@ -190,7 +192,7 @@ export async function tutorChatStream(
             }
 
             if (parsed.done) {
-              callbacks.onDone();
+              callbacks.onDone(parsed.trace);
               return;
             }
 
@@ -249,7 +251,7 @@ export async function solveImageQuestion(
   file: File,
   language = "English",
   mode = "Deep Learning",
-): Promise<{ extracted_text: string; confidence: number; solution: string; lines: string[] }> {
+): Promise<{ extracted_text: string; confidence: number; solution: string; lines: string[]; trace?: any }> {
   const form = new FormData();
   form.append("image", file);
   const res = await fetch(
