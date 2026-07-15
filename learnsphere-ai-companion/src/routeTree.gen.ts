@@ -12,22 +12,15 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WarsRouteImport } from './routes/wars'
 import { Route as VoiceRouteImport } from './routes/voice'
 import { Route as VisualizerRouteImport } from './routes/visualizer'
-import { Route as VaultRouteImport } from './routes/vault'
 import { Route as TutorRouteImport } from './routes/tutor'
-import { Route as TimetableRouteImport } from './routes/timetable'
-import { Route as TeachRouteImport } from './routes/teach'
-import { Route as SkillsRouteImport } from './routes/skills'
 import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as PerformanceRouteImport } from './routes/performance'
-import { Route as MoodRouteImport } from './routes/mood'
 import { Route as MistakesRouteImport } from './routes/mistakes'
 import { Route as LearningRouteImport } from './routes/learning'
-import { Route as HealthRouteImport } from './routes/health'
 import { Route as FocusRouteImport } from './routes/focus'
 import { Route as DevInterviewRouteImport } from './routes/dev-interview'
 import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as CareerRouteImport } from './routes/career'
 import { Route as AvatarRouteImport } from './routes/avatar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
@@ -47,29 +40,9 @@ const VisualizerRoute = VisualizerRouteImport.update({
   path: '/visualizer',
   getParentRoute: () => rootRouteImport,
 } as any)
-const VaultRoute = VaultRouteImport.update({
-  id: '/vault',
-  path: '/vault',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TutorRoute = TutorRouteImport.update({
   id: '/tutor',
   path: '/tutor',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TimetableRoute = TimetableRouteImport.update({
-  id: '/timetable',
-  path: '/timetable',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TeachRoute = TeachRouteImport.update({
-  id: '/teach',
-  path: '/teach',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SkillsRoute = SkillsRouteImport.update({
-  id: '/skills',
-  path: '/skills',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QuizRoute = QuizRouteImport.update({
@@ -87,11 +60,6 @@ const PerformanceRoute = PerformanceRouteImport.update({
   path: '/performance',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MoodRoute = MoodRouteImport.update({
-  id: '/mood',
-  path: '/mood',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const MistakesRoute = MistakesRouteImport.update({
   id: '/mistakes',
   path: '/mistakes',
@@ -100,11 +68,6 @@ const MistakesRoute = MistakesRouteImport.update({
 const LearningRoute = LearningRouteImport.update({
   id: '/learning',
   path: '/learning',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HealthRoute = HealthRouteImport.update({
-  id: '/health',
-  path: '/health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FocusRoute = FocusRouteImport.update({
@@ -120,11 +83,6 @@ const DevInterviewRoute = DevInterviewRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CareerRoute = CareerRouteImport.update({
-  id: '/career',
-  path: '/career',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AvatarRoute = AvatarRouteImport.update({
@@ -147,22 +105,15 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/avatar': typeof AvatarRoute
-  '/career': typeof CareerRoute
   '/dashboard': typeof DashboardRoute
   '/dev-interview': typeof DevInterviewRoute
   '/focus': typeof FocusRoute
-  '/health': typeof HealthRoute
   '/learning': typeof LearningRoute
   '/mistakes': typeof MistakesRoute
-  '/mood': typeof MoodRoute
   '/performance': typeof PerformanceRoute
   '/projects': typeof ProjectsRoute
   '/quiz': typeof QuizRoute
-  '/skills': typeof SkillsRoute
-  '/teach': typeof TeachRoute
-  '/timetable': typeof TimetableRoute
   '/tutor': typeof TutorRoute
-  '/vault': typeof VaultRoute
   '/visualizer': typeof VisualizerRoute
   '/voice': typeof VoiceRoute
   '/wars': typeof WarsRoute
@@ -171,22 +122,15 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/avatar': typeof AvatarRoute
-  '/career': typeof CareerRoute
   '/dashboard': typeof DashboardRoute
   '/dev-interview': typeof DevInterviewRoute
   '/focus': typeof FocusRoute
-  '/health': typeof HealthRoute
   '/learning': typeof LearningRoute
   '/mistakes': typeof MistakesRoute
-  '/mood': typeof MoodRoute
   '/performance': typeof PerformanceRoute
   '/projects': typeof ProjectsRoute
   '/quiz': typeof QuizRoute
-  '/skills': typeof SkillsRoute
-  '/teach': typeof TeachRoute
-  '/timetable': typeof TimetableRoute
   '/tutor': typeof TutorRoute
-  '/vault': typeof VaultRoute
   '/visualizer': typeof VisualizerRoute
   '/voice': typeof VoiceRoute
   '/wars': typeof WarsRoute
@@ -196,22 +140,15 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/avatar': typeof AvatarRoute
-  '/career': typeof CareerRoute
   '/dashboard': typeof DashboardRoute
   '/dev-interview': typeof DevInterviewRoute
   '/focus': typeof FocusRoute
-  '/health': typeof HealthRoute
   '/learning': typeof LearningRoute
   '/mistakes': typeof MistakesRoute
-  '/mood': typeof MoodRoute
   '/performance': typeof PerformanceRoute
   '/projects': typeof ProjectsRoute
   '/quiz': typeof QuizRoute
-  '/skills': typeof SkillsRoute
-  '/teach': typeof TeachRoute
-  '/timetable': typeof TimetableRoute
   '/tutor': typeof TutorRoute
-  '/vault': typeof VaultRoute
   '/visualizer': typeof VisualizerRoute
   '/voice': typeof VoiceRoute
   '/wars': typeof WarsRoute
@@ -222,22 +159,15 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/avatar'
-    | '/career'
     | '/dashboard'
     | '/dev-interview'
     | '/focus'
-    | '/health'
     | '/learning'
     | '/mistakes'
-    | '/mood'
     | '/performance'
     | '/projects'
     | '/quiz'
-    | '/skills'
-    | '/teach'
-    | '/timetable'
     | '/tutor'
-    | '/vault'
     | '/visualizer'
     | '/voice'
     | '/wars'
@@ -246,22 +176,15 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/avatar'
-    | '/career'
     | '/dashboard'
     | '/dev-interview'
     | '/focus'
-    | '/health'
     | '/learning'
     | '/mistakes'
-    | '/mood'
     | '/performance'
     | '/projects'
     | '/quiz'
-    | '/skills'
-    | '/teach'
-    | '/timetable'
     | '/tutor'
-    | '/vault'
     | '/visualizer'
     | '/voice'
     | '/wars'
@@ -270,22 +193,15 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/avatar'
-    | '/career'
     | '/dashboard'
     | '/dev-interview'
     | '/focus'
-    | '/health'
     | '/learning'
     | '/mistakes'
-    | '/mood'
     | '/performance'
     | '/projects'
     | '/quiz'
-    | '/skills'
-    | '/teach'
-    | '/timetable'
     | '/tutor'
-    | '/vault'
     | '/visualizer'
     | '/voice'
     | '/wars'
@@ -295,22 +211,15 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   AvatarRoute: typeof AvatarRoute
-  CareerRoute: typeof CareerRoute
   DashboardRoute: typeof DashboardRoute
   DevInterviewRoute: typeof DevInterviewRoute
   FocusRoute: typeof FocusRoute
-  HealthRoute: typeof HealthRoute
   LearningRoute: typeof LearningRoute
   MistakesRoute: typeof MistakesRoute
-  MoodRoute: typeof MoodRoute
   PerformanceRoute: typeof PerformanceRoute
   ProjectsRoute: typeof ProjectsRoute
   QuizRoute: typeof QuizRoute
-  SkillsRoute: typeof SkillsRoute
-  TeachRoute: typeof TeachRoute
-  TimetableRoute: typeof TimetableRoute
   TutorRoute: typeof TutorRoute
-  VaultRoute: typeof VaultRoute
   VisualizerRoute: typeof VisualizerRoute
   VoiceRoute: typeof VoiceRoute
   WarsRoute: typeof WarsRoute
@@ -339,39 +248,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VisualizerRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/vault': {
-      id: '/vault'
-      path: '/vault'
-      fullPath: '/vault'
-      preLoaderRoute: typeof VaultRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/tutor': {
       id: '/tutor'
       path: '/tutor'
       fullPath: '/tutor'
       preLoaderRoute: typeof TutorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/timetable': {
-      id: '/timetable'
-      path: '/timetable'
-      fullPath: '/timetable'
-      preLoaderRoute: typeof TimetableRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/teach': {
-      id: '/teach'
-      path: '/teach'
-      fullPath: '/teach'
-      preLoaderRoute: typeof TeachRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/skills': {
-      id: '/skills'
-      path: '/skills'
-      fullPath: '/skills'
-      preLoaderRoute: typeof SkillsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/quiz': {
@@ -395,13 +276,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PerformanceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/mood': {
-      id: '/mood'
-      path: '/mood'
-      fullPath: '/mood'
-      preLoaderRoute: typeof MoodRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/mistakes': {
       id: '/mistakes'
       path: '/mistakes'
@@ -414,13 +288,6 @@ declare module '@tanstack/react-router' {
       path: '/learning'
       fullPath: '/learning'
       preLoaderRoute: typeof LearningRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/health': {
-      id: '/health'
-      path: '/health'
-      fullPath: '/health'
-      preLoaderRoute: typeof HealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/focus': {
@@ -442,13 +309,6 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/career': {
-      id: '/career'
-      path: '/career'
-      fullPath: '/career'
-      preLoaderRoute: typeof CareerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/avatar': {
@@ -479,22 +339,15 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   AvatarRoute: AvatarRoute,
-  CareerRoute: CareerRoute,
   DashboardRoute: DashboardRoute,
   DevInterviewRoute: DevInterviewRoute,
   FocusRoute: FocusRoute,
-  HealthRoute: HealthRoute,
   LearningRoute: LearningRoute,
   MistakesRoute: MistakesRoute,
-  MoodRoute: MoodRoute,
   PerformanceRoute: PerformanceRoute,
   ProjectsRoute: ProjectsRoute,
   QuizRoute: QuizRoute,
-  SkillsRoute: SkillsRoute,
-  TeachRoute: TeachRoute,
-  TimetableRoute: TimetableRoute,
   TutorRoute: TutorRoute,
-  VaultRoute: VaultRoute,
   VisualizerRoute: VisualizerRoute,
   VoiceRoute: VoiceRoute,
   WarsRoute: WarsRoute,

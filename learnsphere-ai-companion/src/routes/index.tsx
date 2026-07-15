@@ -17,7 +17,6 @@ import {
   LineChart,
   Mic,
   Play,
-  Radar,
   ShieldCheck,
   Sparkles,
   Target,
@@ -46,14 +45,13 @@ const workspaceTools = [
   { title: "AI Tutor", desc: "Ask doubts and get step-by-step explanations.", icon: Bot, to: "/tutor" },
   { title: "Learning Plan", desc: "Follow adaptive daily tasks and revision loops.", icon: BookOpen, to: "/learning" },
   { title: "Quiz Builder", desc: "Turn topics and notes into practice tests.", icon: FileQuestion, to: "/quiz" },
-  { title: "Career Roadmap", desc: "Map skills to roles and project milestones.", icon: Target, to: "/career" },
 ];
 
 const timeline = [
   { time: "09:00", title: "Revise RC circuits", tag: "Physics", done: true },
   { time: "10:30", title: "Solve 5 DSA prompts", tag: "Coding", done: true },
   { time: "14:00", title: "Ask tutor about DP states", tag: "AI Tutor", done: false },
-  { time: "17:00", title: "Career roadmap checkpoint", tag: "Growth", done: false },
+  { time: "17:00", title: "Practice mock quiz", tag: "Quiz", done: false },
 ];
 
 const simulatorPrompts = [
@@ -427,8 +425,8 @@ function LandingPage() {
         <section id="roadmap" className="mt-5 grid gap-5 md:grid-cols-3">
           {[
             { title: "Multilingual tutor", desc: "English, Hindi, and more for accessible study support.", icon: Mic },
-            { title: "Skill radar", desc: "See weak areas before they become blockers.", icon: Radar },
-            { title: "Career bridge", desc: "Convert learning progress into job-ready milestones.", icon: GraduationCap },
+            { title: "Smart Practice", desc: "Adaptive quizzes to strengthen your core subjects.", icon: FileQuestion },
+            { title: "AI Visualizer", desc: "Visualize and map complex learning concepts.", icon: GraduationCap },
           ].map((item) => (
             <div key={item.title} className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/50">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600 ring-1 ring-sky-100">

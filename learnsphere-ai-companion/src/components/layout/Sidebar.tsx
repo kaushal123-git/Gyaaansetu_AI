@@ -1,9 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  LayoutDashboard, Bot, User, Compass, Home, HeartPulse, BookOpen,
-  Smile, TrendingUp, FolderKanban, FileQuestion, Radar, Swords, GraduationCap,
-  Calendar, Network, Mic, LogOut, X, Award, Flame, Code2
+  LayoutDashboard, Bot, User, Home, BookOpen,
+  TrendingUp, FolderKanban, FileQuestion, Swords,
+  Network, Mic, LogOut, X, Flame, Code2
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -22,7 +22,6 @@ const groups = [
       { to: "/dev-interview", label: "Dev Interview Bot", icon: Code2 },
       { to: "/projects", label: "Build Projects", icon: FolderKanban },
       { to: "/quiz", label: "Practice Quizzes", icon: FileQuestion },
-      { to: "/teach", label: "Teach Back", icon: GraduationCap },
       { to: "/visualizer", label: "Visualizer", icon: Network },
       { to: "/voice", label: "Voice Notes", icon: Mic },
     ]
@@ -30,20 +29,14 @@ const groups = [
   {
     title: "Growth & Progress",
     items: [
-      { to: "/career", label: "Career Roadmap", icon: Compass },
-      { to: "/skills", label: "Skills Radar", icon: Radar },
       { to: "/avatar", label: "My Profile", icon: User },
       { to: "/performance", label: "Performance", icon: TrendingUp },
-      { to: "/vault", label: "Certificate Vault", icon: Award },
     ]
   },
   {
     title: "Wellness & Play",
     items: [
       { to: "/focus", label: "Focus Room", icon: Home },
-      { to: "/health", label: "Health Monitor", icon: HeartPulse },
-      { to: "/timetable", label: "Timetable", icon: Calendar },
-      { to: "/mood", label: "Mood Check-in", icon: Smile },
       { to: "/wars", label: "Study Wars", icon: Swords },
     ]
   }

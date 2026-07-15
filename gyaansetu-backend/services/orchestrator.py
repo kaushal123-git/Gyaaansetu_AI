@@ -282,13 +282,24 @@ class GyaanSetuOrchestrator:
         compression_ratio = f"{round((1 - len(compressed_context) / max(1, original_size)) * 100)}%"
 
         # Prompt Synthesis
-        fused_prompt = (
-            f"You are a helpful, professional, and personalized GyaanSetu AI Tutor. "
-            f"Use the background context provided to customize your explanations. Adapt to the student's level.\n\n"
-            f"--- BACKGROUND SYSTEM CONTEXT ---\n{compressed_context}\n----------------------------------\n\n"
-            f"STUDENT INQUIRY: {query}\n\n"
-            f"Provide a clear, detailed, and personalized response. Address any prerequisites or mistakes if relevant."
-        )
+        cleaned_query = re.sub(r'[^\w\s]', '', query.lower()).strip()
+        greetings = {"hello", "hi", "hey", "greetings", "yo", "howdy", "hola", "namaste", "good morning", "good afternoon", "good evening", "hi there", "hello there", "helllo", "helloo", "hey there", "hii", "hii there"}
+        
+        if cleaned_query in greetings:
+            fused_prompt = (
+                f"You are GyaanSetu AI, a friendly AI tutor. "
+                f"The user is greeting you. Respond with a warm greeting. "
+                f"Keep it extremely concise (under 2 sentences) and ask what they would like to learn today.\n\n"
+                f"STUDENT INQUIRY: {query}"
+            )
+        else:
+            fused_prompt = (
+                f"You are a helpful, professional, and personalized GyaanSetu AI Tutor. "
+                f"Use the background context provided to customize your explanations. Adapt to the student's level.\n\n"
+                f"--- BACKGROUND SYSTEM CONTEXT ---\n{compressed_context}\n----------------------------------\n\n"
+                f"STUDENT INQUIRY: {query}\n\n"
+                f"Provide a clear and personalized response. If the inquiry is simple, keep the response concise. Address prerequisites or mistakes ONLY if highly relevant."
+            )
 
         fusion_stats = {
             "deduplication_removed_chunks": 1 if rag["active"] else 0,
@@ -320,7 +331,7 @@ class GyaanSetuOrchestrator:
                     for line in f:
                         if "GEMINI_API_KEY" in line or "VITE_API_KEY" in line:
                             val = line.split("=")[-1].strip()
-                            if val and not val.startswith("AQ."): # dummy key check
+                            if val: # dummy key check
                                 gemini_key = val
             except Exception:
                 pass
@@ -340,98 +351,26 @@ class GyaanSetuOrchestrator:
         failover_path = []
         routing_reason = "Tutor task routed to general model"
         
-        # Check if we should attempt Cloud Gemini
-        use_cloud = False
-        if gemini_key and not gemini_key.startswith("AQ."):
-            use_cloud = True
-            primary_route = "Gemini API (Cloud)"
-            routing_reason = "Cloud API Key found, routing to Gemini 2.5 Flash for low latency and high quality."
-
-        logger.info(f"Router Selected: {primary_route} model={selected_model} cloud={use_cloud}")
-
         start_time = time.time()
         success = False
         response_content = ""
-        final_routed_model = "Offline Model"
-
-        # GERA Engine Resilience Retry loop
-        # Try 1: Primary chosen route (Gemini or local model)
-        if use_cloud:
-            try:
-                # Call Gemini beta stream API using httpx
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?key={gemini_key}"
-                headers = {"Content-Type": "application/json"}
-                # Simple prompt wrapper for system instructions in Gemini call
-                payload = {
-                    "contents": [{"parts": [{"text": fused_prompt}]}],
-                    "generationConfig": {"temperature": 0.4}
-                }
-                
-                async with httpx.AsyncClient(timeout=30.0) as client:
-                    async with client.stream("POST", url, headers=headers, json=payload) as response:
-                        if response.status_code == 200:
-                            success = True
-                            final_routed_model = "Gemini 2.5 Flash"
-                            async for line in response.aiter_lines():
-                                if not line.strip():
-                                    continue
-                                # JSON stream parsing
-                                try:
-                                    clean_line = line.replace("data: ", "").strip()
-                                    if clean_line.startswith(","):
-                                        clean_line = clean_line[1:]
-                                    chunk_data = json.loads(clean_line)
-                                    text_token = chunk_data["candidates"][0]["content"]["parts"][0]["text"]
-                                    response_content += text_token
-                                    yield text_token
-                                except Exception:
-                                    pass
-                        else:
-                            raise Exception(f"Gemini API returned status {response.status_code}")
-            except Exception as e:
-                logger.warning(f"⚠️ GERA FAILOVER: Gemini Cloud failed. Reason: {e}. Routing to Local Llama...")
-                failover_path.append("Gemini Cloud Failed (429 or Timeout)")
-                use_cloud = False # fallback to local Ollama
-
-        # Try 2: Local Ollama Model
-        if not use_cloud:
-            try:
-                # Call Ollama streaming via existing service wrapper
-                async for token in ollama_service.stream_chat(
-                    prompt=fused_prompt,
-                    task=task,
-                    mode=mode,
-                    language=language
-                ):
-                    # Check if token is warning (ollama offline)
-                    if "Ollama is not running" in token or "AI engine error" in token:
-                        raise Exception("Local Ollama endpoint unreachable or model failed")
-                    success = True
-                    final_routed_model = f"{selected_model}:8b" if ":" not in selected_model else selected_model
-                    response_content += token
-                    yield token
-            except Exception as e:
-                logger.warning(f"⚠️ GERA FAILOVER: Ollama model {selected_model} failed: {e}. Trying Phi3 fast model...")
-                failover_path.append(f"Ollama {selected_model} Unreachable")
-                
-                # Try 3: Absolute local fallback (Phi3)
-                try:
-                    async for token in ollama_service.stream_chat(
-                        prompt=fused_prompt,
-                        task="fast",
-                        mode=mode,
-                        language=language
-                    ):
-                        if "Ollama is not running" in token:
-                            raise Exception("Phi3 fallback failed too")
-                        success = True
-                        final_routed_model = "Phi-3 (GERA Fallback)"
-                        response_content += token
-                        yield token
-                except Exception as ex:
-                    logger.critical(f"❌ GERA CRITICAL: All model options failed. {ex}")
-                    failover_path.append("Phi3 Fallback Failed")
-                    yield "\n\n⚠️ **GyaanSetu Resilience Engine Alert**: All AI models are currently offline. Please run the `.\\start-all.ps1` script to initialize Ollama and ensure your models are pulled."
+        
+        # Directly use Local Ollama Model
+        try:
+            async for token in ollama_service.stream_chat(
+                prompt=fused_prompt,
+                task=task,
+                mode=mode,
+                language=language
+            ):
+                success = True
+                final_routed_model = f"{selected_model}:8b" if ":" not in selected_model else selected_model
+                response_content += token
+                yield token
+        except Exception as e:
+            logger.warning(f"⚠️ Ollama model {selected_model} failed: {e}")
+            failover_path.append(f"Ollama {selected_model} Unreachable")
+            yield "\n\n⚠️ **GyaanSetu AI Alert**: The local AI model is currently offline. Please run the `.\\start-all.ps1` script to initialize Ollama and ensure your models are pulled."
 
         latency = round(time.time() - start_time, 2)
         

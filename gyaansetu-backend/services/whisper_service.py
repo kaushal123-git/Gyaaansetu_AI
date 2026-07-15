@@ -12,8 +12,26 @@ load_dotenv()
 logger = logging.getLogger("gyaansetu.whisper")
 
 WHISPER_MODEL  = os.getenv("WHISPER_MODEL",  "base")
-WHISPER_DEVICE = os.getenv("WHISPER_DEVICE", "cpu")
 
+def _detect_device() -> str:
+    env_device = os.getenv("WHISPER_DEVICE")
+    if env_device:
+        return env_device
+    try:
+        import torch
+        if torch.cuda.is_available():
+            return "cuda"
+    except Exception:
+        pass
+    try:
+        import ctranslate2
+        if "cuda" in ctranslate2.get_supported_devices():
+            return "cuda"
+    except Exception:
+        pass
+    return "cpu"
+
+WHISPER_DEVICE = _detect_device()
 _model = None  # Lazy-loaded on first use
 
 
@@ -23,11 +41,22 @@ def _get_model():
         try:
             from faster_whisper import WhisperModel
             logger.info(f"Loading Whisper model '{WHISPER_MODEL}' on {WHISPER_DEVICE}…")
-            _model = WhisperModel(
-                WHISPER_MODEL,
-                device=WHISPER_DEVICE,
-                compute_type="int8" if WHISPER_DEVICE == "cpu" else "float16",
-            )
+            try:
+                _model = WhisperModel(
+                    WHISPER_MODEL,
+                    device=WHISPER_DEVICE,
+                    compute_type="int8" if WHISPER_DEVICE == "cpu" else "float16",
+                )
+            except Exception as cuda_err:
+                if WHISPER_DEVICE == "cuda":
+                    logger.warning(f"Failed to load Whisper on CUDA: {cuda_err}. Falling back to CPU.")
+                    _model = WhisperModel(
+                        WHISPER_MODEL,
+                        device="cpu",
+                        compute_type="int8",
+                    )
+                else:
+                    raise cuda_err
             logger.info("✅ Whisper model loaded")
         except ImportError:
             logger.error("faster-whisper not installed. Run: pip install faster-whisper")

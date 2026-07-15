@@ -181,6 +181,29 @@ def _is_greeting(prompt: str) -> bool:
     return cleaned in greetings
 
 
+def _get_gemini_key() -> str | None:
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    if not gemini_key:
+        try:
+            possible_paths = [
+                "../devinterviewbot/.env",
+                "devinterviewbot/.env",
+                "./devinterviewbot/.env",
+                "../../devinterviewbot/.env"
+            ]
+            for p in possible_paths:
+                if os.path.exists(p):
+                    with open(p, "r") as f:
+                        for line in f:
+                            if "GEMINI_API_KEY" in line or "VITE_API_KEY" in line:
+                                val = line.split("=")[-1].strip()
+                                if val:
+                                    return val
+        except Exception:
+            pass
+    return gemini_key
+
+
 async def stream_chat(
     prompt: str,
     task: TaskType = "tutor",
@@ -188,8 +211,9 @@ async def stream_chat(
     mode: str = "Deep Learning",
     language: str = "English",
 ) -> AsyncGenerator[str, None]:
-    """Stream tokens from Ollama for a given prompt."""
-    model = await get_best_available_model(task)
+    """Stream tokens from Gemini API first. If it fails, fall back to local Ollama."""
+    gemini_key = _get_gemini_key()
+    
     if task == "tutor" and not system and _is_greeting(prompt):
         system_prompt = _append_language_instruction(
             "You are GyaanSetu AI, a helpful and friendly local AI tutor companion. "
@@ -201,13 +225,14 @@ async def stream_chat(
     else:
         system_prompt = _append_language_instruction(system, language) if system else _build_system_prompt(mode, language)
 
-    # Lower temperature for rigorous academic modes, standard for creative
     temp = 0.3 if mode in ["Exam Preparation", "Deep Learning", "Competitive Exam Mode", "Interview Mode"] else 0.7
 
+    # Use local Ollama
+    model = await get_best_available_model(task)
     options = {
         "temperature": temp,
-        "num_predict": 1536, # Allow longer reasoning replies
-        "num_ctx": 8192,     # Large context window for better memory retrieval
+        "num_predict": 1536, 
+        "num_ctx": 8192,     
         "top_p": 0.9,
     }
 
@@ -252,8 +277,9 @@ async def complete(
     language: str = "English",
     max_tokens: int = 2048,
 ) -> str:
-    """Blocking completion — collects all tokens and returns full string."""
-    model = await get_best_available_model(task)
+    """Blocking completion — tries Gemini first, then collects all tokens from local Ollama."""
+    gemini_key = _get_gemini_key()
+    
     if task == "tutor" and not system and _is_greeting(prompt):
         system_prompt = _append_language_instruction(
             "You are GyaanSetu AI, a helpful and friendly local AI tutor companion. "
@@ -267,6 +293,8 @@ async def complete(
 
     temp = 0.3 if mode in ["Exam Preparation", "Deep Learning", "Competitive Exam Mode", "Interview Mode"] else 0.7
 
+    # Use local Ollama
+    model = await get_best_available_model(task)
     options = {
         "temperature": temp,
         "num_predict": max_tokens,

@@ -12,8 +12,6 @@ import {
   tutorChatStream, tutorVoiceChat, solveImageQuestion,
   ragIngestFile, ragGetStats, checkBackendHealth, type RagStats
 } from "@/lib/api/ai.service";
-import { ArchitectureTrace } from "@/components/tutor/ArchitectureTrace";
-
 export const Route = createFileRoute("/tutor")({
   head: () => ({ meta: [{ title: "AI Tutor — GyaanSetu AI" }] }),
   component: Tutor,
@@ -36,6 +34,7 @@ interface ChatSession {
   messages: Msg[];
   mode: string;
   lang: string;
+  use_rag?: boolean;
 }
 
 function Tutor() {
@@ -68,7 +67,7 @@ function Tutor() {
   const bottomRef        = useRef<HTMLDivElement>(null);
   const fileInputRef     = useRef<HTMLInputElement>(null);
   const ragInputRef      = useRef<HTMLInputElement>(null);
-  const userId = getUserId();
+  const userId = getUserId() || "default-user";
 
   // Poll backend health and RAG stats every 10 seconds
   useEffect(() => {
@@ -102,11 +101,6 @@ function Tutor() {
     if (window.innerWidth >= 1024) {
       setShowHistory(true);
     }
-    const userStr = localStorage.getItem("gyaansetu_user");
-    if (!userStr || !userId) {
-      window.location.href = "/auth";
-      return;
-    }
 
     try {
       const stored = localStorage.getItem("gyaansetu_tutor_sessions");
@@ -119,6 +113,7 @@ function Tutor() {
           setMessages(sorted[0].messages);
           setMode(sorted[0].mode || modes[0]);
           setLang(sorted[0].lang || "English");
+          setRagEnabled(sorted[0].use_rag || false);
           return;
         }
       }
@@ -136,11 +131,13 @@ function Tutor() {
         { role: "ai", text: "Hi! I'm your offline AI Tutor powered by Llama 3.1. Ask me anything — text, voice, or image. I also search your uploaded notes when RAG is enabled! 📚" }
       ],
       mode: modes[0],
-      lang: "English"
+      lang: "English",
+      use_rag: false
     };
     setSessions([defaultSession]);
     setCurrentSessionId(defaultId);
     setMessages(defaultSession.messages);
+    setRagEnabled(false);
   }, []);
 
   // Sync current messages to sessions array & localStorage
@@ -159,7 +156,7 @@ function Tutor() {
               title = cleanText.length > 22 ? cleanText.slice(0, 20) + "..." : cleanText;
             }
           }
-          return { ...s, messages, title, mode, lang, timestamp: Date.now() };
+          return { ...s, messages, title, mode, lang, use_rag: ragEnabled, timestamp: Date.now() };
         }
         return s;
       });
@@ -169,26 +166,31 @@ function Tutor() {
       localStorage.setItem("gyaansetu_tutor_sessions", JSON.stringify(sorted));
       return sorted;
     });
-  }, [messages, mode, lang, currentSessionId]);
+  }, [messages, mode, lang, ragEnabled, currentSessionId]);
 
   // Session actions
-  const startNewChat = () => {
+  const startNewChat = (isRag = false) => {
     const newId = `session_${Date.now()}`;
     const newSession: ChatSession = {
       id: newId,
-      title: "New Chat",
+      title: isRag ? "New RAG Chat" : "New Chat",
       timestamp: Date.now(),
       messages: [
-        { role: "ai", text: "Hi! I'm your offline AI Tutor powered by Llama 3.1. Ask me anything — text, voice, or image. I also search your uploaded notes when RAG is enabled! 📚" }
+        { role: "ai", text: isRag
+          ? "Hi! This is a dedicated RAG session. Upload notes/PDFs in the RAG panel below, and I will base all my answers on your uploaded files! 📚"
+          : "Hi! I'm your offline AI Tutor powered by Llama 3.1. Ask me anything — text, voice, or image. I also search your uploaded notes when RAG is enabled! 📚"
+        }
       ],
       mode: modes[0],
-      lang: "English"
+      lang: "English",
+      use_rag: isRag
     };
     setSessions(prev => [newSession, ...prev]);
     setCurrentSessionId(newId);
     setMessages(newSession.messages);
     setMode(modes[0]);
     setLang("English");
+    setRagEnabled(isRag);
   };
 
   const selectSession = (id: string) => {
@@ -198,6 +200,7 @@ function Tutor() {
       setMessages(target.messages);
       setMode(target.mode || modes[0]);
       setLang(target.lang || "English");
+      setRagEnabled(target.use_rag || false);
     }
   };
 
@@ -220,11 +223,13 @@ function Tutor() {
             { role: "ai", text: "Hi! I'm your offline AI Tutor powered by Llama 3.1. Ask me anything — text, voice, or image. I also search your uploaded notes when RAG is enabled! 📚" }
           ],
           mode: modes[0],
-          lang: "English"
+          lang: "English",
+          use_rag: false
         };
         setSessions([defaultSession]);
         setCurrentSessionId(defaultId);
         setMessages(defaultSession.messages);
+        setRagEnabled(false);
       }
     }
   };
@@ -461,13 +466,22 @@ function Tutor() {
               <span className="text-xs font-bold text-[#00F5FF] tracking-wider flex items-center gap-1.5 uppercase">
                 <MessageSquare className="h-3.5 w-3.5" /> Recent Chats
               </span>
-              <button
-                onClick={startNewChat}
-                className="p-1 rounded hover:bg-white/10 text-blue-200 transition"
-                title="New Chat"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => startNewChat(false)}
+                  className="p-1 rounded hover:bg-white/10 text-blue-200 transition"
+                  title="New Standard Chat"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => startNewChat(true)}
+                  className="p-1 rounded hover:bg-white/10 text-[#00F5FF] transition"
+                  title="New RAG Chat"
+                >
+                  <Database className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-1 scrollbar-thin pr-1">
@@ -519,13 +533,24 @@ function Tutor() {
                 <Bot className="h-5 w-5 text-[#050816]" />
               </div>
               <div>
-                <div className="font-display font-semibold text-white">AI Tutor</div>
+                <div className="font-display font-semibold text-white flex items-center gap-2">
+                  AI Tutor
+                  {ragEnabled ? (
+                    <span className="text-[9px] bg-[#00F5FF]/10 text-[#00F5FF] border border-[#00F5FF]/20 rounded-full px-2 py-0.5 font-mono font-bold">
+                      RAG Session
+                    </span>
+                  ) : (
+                    <span className="text-[9px] bg-slate-800/50 text-slate-400 border border-slate-700/50 rounded-full px-2 py-0.5 font-mono">
+                      Standard
+                    </span>
+                  )}
+                </div>
                 <div className="text-xs text-blue-200/60 flex items-center gap-2">
                   <span className={`h-1.5 w-1.5 rounded-full ${backendOnline ? "bg-[#22C55E]" : "bg-red-500"}`} />
                   {mode} · {lang}
                   {ragEnabled && ragStats && (
                     <span className="text-[#00F5FF] text-[9px] font-mono">
-                      · RAG ({ragStats.chunk_count} chunks)
+                      · {ragStats.chunk_count} chunks
                     </span>
                   )}
                 </div>
@@ -553,10 +578,18 @@ function Tutor() {
                 RAG {ragEnabled ? "ON" : "OFF"}
               </button>
               <button
-                onClick={startNewChat}
-                className="bg-slate-800/40 border border-slate-700/30 text-blue-200 hover:bg-slate-800/60 rounded-lg px-3 py-1.5 text-xs flex items-center gap-1.5 transition"
+                onClick={() => startNewChat(false)}
+                className="bg-slate-800/40 border border-slate-700/30 text-blue-200 hover:bg-slate-800/60 rounded-lg px-2.5 py-1.5 text-xs flex items-center gap-1 transition"
+                title="New Standard Chat"
               >
-                <Sparkles className="h-3 w-3 text-[#00F5FF]" /> New Chat
+                <Sparkles className="h-3 w-3 text-[#00F5FF]" /> Standard
+              </button>
+              <button
+                onClick={() => startNewChat(true)}
+                className="bg-[#00F5FF]/10 border border-[#00F5FF]/20 text-[#00F5FF] hover:bg-[#00F5FF]/20 rounded-lg px-2.5 py-1.5 text-xs flex items-center gap-1 transition"
+                title="New RAG Chat"
+              >
+                <Database className="h-3 w-3" /> RAG Chat
               </button>
             </div>
           </div>
@@ -639,9 +672,6 @@ function Tutor() {
                         <span className="inline-block w-1.5 h-4 bg-[#00F5FF] ml-1 animate-pulse rounded-sm" />
                       )}
                     </div>
-                    {m.role === "ai" && m.trace && (
-                      <ArchitectureTrace trace={m.trace} />
-                    )}
                     {m.audioUrl && (
                       <audio controls src={`http://localhost:8000${m.audioUrl}`} className="h-8 w-48 opacity-80" />
                     )}

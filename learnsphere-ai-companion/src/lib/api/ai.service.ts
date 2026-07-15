@@ -117,7 +117,7 @@ function getActiveUserId(userId?: string): string {
 
 export async function checkBackendHealth(): Promise<{ status: string; version: string; ollama_connected: boolean }> {
   try {
-    const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(3000) });
+    const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(5000) });
     if (!res.ok) throw new Error();
     return res.json();
   } catch (err) {
